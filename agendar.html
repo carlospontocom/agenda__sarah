@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agendar - Reabilitação</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f4f8;
+    color: #1a202c;
+    min-height: 100vh;
+  }
+  .container { max-width: 1000px; margin: 0 auto; padding: 2rem 1rem; }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+    text-align: left;
+  }
+  header .title h1 { font-size: 1.75rem; color: #2b6cb0; }
+  header .title p { color: #718096; font-size: .9rem; margin-top: .25rem; }
+  header .menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #2b6cb0;
+    cursor: pointer;
+    padding: .25rem;
+    line-height: 1;
+  }
+  header .header-links { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .header-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: .6rem 1.1rem;
+    color: #4a5568;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: .9rem;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .header-link:hover { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49,130,206,.12); }
+
+  /* ---- Service Cards ---- */
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+  .service-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.25rem 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s;
+    border-left: 5px solid #3182ce;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .service-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.12);
+  }
+  .service-card .icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+  .service-card .info h3 { font-size: 1rem; color: #2d3748; }
+  .service-card .info span { font-size: .8rem; color: #718096; }
+
+  /* ---- Modal ---- */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 480px;
+    padding: 2rem 1.5rem 1.5rem;
+    position: relative;
+    animation: modalIn .25s ease;
+  }
+  @keyframes modalIn {
+    from { transform: scale(.92) translateY(20px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  .modal-close {
+    position: absolute;
+    top: .75rem; right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #a0aec0;
+    cursor: pointer;
+    padding: .25rem;
+  }
+  .modal-close:hover { color: #4a5568; }
+  .modal h2 { font-size: 1.15rem; color: #2d3748; margin-bottom: .25rem; }
+  .modal .service-badge {
+    display: inline-block;
+    background: #ebf4ff;
+    color: #2b6cb0;
+    font-size: .8rem;
+    font-weight: 600;
+    padding: .25rem .75rem;
+    border-radius: 20px;
+    margin-bottom: .75rem;
+  }
+
+  /* ---- Steps ---- */
+  .step { display: none; }
+  .step.active { display: block; }
+  .step-title {
+    font-size: .85rem;
+    font-weight: 600;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 1rem;
+  }
+  .step-indicator {
+    display: flex;
+    gap: .35rem;
+    margin-bottom: 1.25rem;
+  }
+  .step-dot {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: #e2e8f0;
+    transition: background .3s;
+  }
+  .step-dot.active { background: #3182ce; }
+  .step-dot.done { background: #38a169; }
+
+  /* ---- Step 1: Patient ---- */
+  .prontuario-row { display: flex; gap: .75rem; }
+  .prontuario-row .form-group:first-child { flex: 0 0 155px; }
+  .prontuario-row .form-group:last-child { flex: 1; }
+  .found-name { color: #38a169; font-size: .8rem; font-weight: 600; display: none; }
+  .form-group { display: flex; flex-direction: column; gap: .3rem; margin-bottom: 1rem; }
+  .form-group label { font-size: .85rem; font-weight: 600; color: #4a5568; }
+  .form-group input {
+    font: inherit;
+    border-radius: 8px;
+    border: 1px solid #cbd5e0;
+    padding: .6rem .75rem;
+    font-size: .95rem;
+    outline: none;
+    transition: border .2s, box-shadow .2s;
+  }
+  .form-group input:focus { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49,130,206,.15); }
+  .form-group input:read-only { background: #f7fafc; color: #4a5568; }
+
+  /* ---- Calendar ---- */
+  .calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .75rem;
+  }
+  .calendar-header .month-year { font-weight: 700; font-size: 1rem; color: #2d3748; }
+  .calendar-nav {
+    background: none;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: .35rem .55rem;
+    cursor: pointer;
+    color: #4a5568;
+    font-size: 1rem;
+    transition: background .2s;
+  }
+  .calendar-nav:hover { background: #edf2f7; }
+  .calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: .75rem;
+    font-weight: 700;
+    color: #a0aec0;
+    margin-bottom: .35rem;
+  }
+  .calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+  .calendar-days button {
+    aspect-ratio: 1;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    font-size: .9rem;
+    cursor: pointer;
+    transition: background .15s;
+    color: #2d3748;
+  }
+  .calendar-days button:hover:not(:disabled) { background: #ebf4ff; }
+  .calendar-days button.selected { background: #3182ce; color: #fff; font-weight: 700; }
+  .calendar-days button:disabled { color: #cbd5e0; cursor: default; }
+  .calendar-days button.other-month { color: #cbd5e0; }
+
+  /* ---- Time Slots ---- */
+  .time-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .5rem;
+  }
+  .time-btn {
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    padding: .75rem .5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    color: #2d3748;
+  }
+  .time-btn:hover:not(:disabled) { border-color: #3182ce; background: #ebf4ff; }
+  .time-btn.selected { border-color: #3182ce; background: #3182ce; color: #fff; }
+  .time-btn:disabled {
+    border-color: #f0f4f8;
+    background: #f7fafc;
+    color: #cbd5e0;
+    cursor: default;
+    text-decoration: line-through;
+  }
+
+  /* ---- Summary & Actions ---- */
+  .summary-box {
+    background: #f7fafc;
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    margin-bottom: 1.25rem;
+  }
+  .summary-box .row { font-size: .9rem; color: #4a5568; display: flex; gap: .5rem; }
+  .summary-box .row strong { color: #2d3748; min-width: 80px; }
+  .modal-actions {
+    display: flex;
+    gap: .75rem;
+  }
+  .modal-actions button {
+    flex: 1;
+    padding: .75rem;
+    font-size: .95rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .btn-back { background: #edf2f7; color: #4a5568; }
+  .btn-back:hover { background: #e2e8f0; }
+  .btn-next { background: #3182ce; color: #fff; }
+  .btn-next:hover { background: #2b6cb0; }
+  .btn-next:disabled { background: #a0c4e8; cursor: default; }
+  .btn-save { background: #38a169; color: #fff; }
+  .btn-save:hover { background: #2f855a; }
+
+  /* ---- Success Modal ---- */
+  .success-icon {
+    text-align: center;
+    font-size: 3rem;
+    margin-bottom: .75rem;
+  }
+  .success-modal h2 { text-align: center; color: #276749; }
+  .success-modal .success-details {
+    background: #f0fff4;
+    border-radius: 10px;
+    padding: 1rem;
+    margin: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+  }
+  .success-modal .success-details .row { font-size: .9rem; color: #2d3748; display: flex; gap: .5rem; }
+  .success-modal .success-details .row strong { min-width: 70px; }
+  .success-modal .modal-actions .btn-outline {
+    background: #fff;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+  }
+  .success-modal .modal-actions .btn-outline:hover { background: #f7fafc; }
+
+  /* ---- Toast ---- */
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: #2d3748;
+    color: #fff;
+    padding: .75rem 1.25rem;
+    border-radius: 8px;
+    font-size: .9rem;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity .3s, transform .3s;
+    pointer-events: none;
+    z-index: 300;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: #276749; }
+  .toast.error { background: #9b2c2c; }
+
+  @media (max-width: 768px) {
+    .container { padding: 1rem .5rem; }
+    .services-grid { grid-template-columns: 1fr; }
+    .time-grid { grid-template-columns: 1fr; }
+    header { flex-wrap: wrap; gap: .5rem; text-align: center; }
+    header .title { width: 100%; }
+    header .title p { font-size: .85rem; }
+    header .menu-toggle { display: block; }
+    header .header-links {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      gap: .35rem;
+    }
+    header .header-links.open { display: flex; }
+    header .header-links a { width: 100%; text-align: center; }
+    .modal { padding: 1.5rem 1rem; }
+    .prontuario-row { flex-direction: column; }
+    .prontuario-row .form-group:first-child { flex: none; width: 100%; }
+    .calendar-days button { font-size: .8rem; }
+    .step-indicator { gap: .2rem; }
+  }
+  @media (max-width: 480px) {
+    .modal-actions { flex-direction: column; gap: .5rem; }
+    .modal-actions button, .modal-actions a { width: 100%; }
+  }
+
+  footer {
+    background: #1a202c;
+    color: #a0aec0;
+    font-size: .82rem;
+    padding: 2rem 1.5rem;
+    margin-top: 2rem;
+  }
+  .footer-inner { max-width: 1100px; margin: 0 auto; text-align: center; }
+  .footer-links { display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: center; margin-bottom: 1rem; }
+  .footer-links a { color: #cbd5e0; text-decoration: none; transition: color .2s; }
+  .footer-links a:hover { color: #fff; }
+  .footer-ext { margin-bottom: 1rem; }
+  .footer-ext a {
+    display: inline-block;
+    background: #2d3748;
+    color: #e2e8f0;
+    text-decoration: none;
+    font-weight: 700;
+    padding: .5rem 1.25rem;
+    border-radius: 8px;
+    transition: background .2s;
+  }
+  .footer-ext a:hover { background: #4a5568; }
+  .footer-copy { color: #718096; }
+  .footer-author { color: #4a5568; font-size: .8rem; margin-top: .5rem; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="title">
+      <h1>Agenda de Reabilitação</h1>
+      <p>Escolha um serviço para agendar</p>
+    </div>
+    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">&#9776;</button>
+    <div class="header-links" id="headerLinks">
+      <a href="index.html" class="header-link">Início</a>
+      <a href="cadastro.html" class="header-link">+ Cadastrar Paciente</a>
+      <a href="agendamentos.html" class="header-link">Ver Agendamentos</a>
+    </div>
+  </header>
+
+  <div class="services-grid" id="servicesGrid"></div>
+</div>
+
+<!-- Scheduling Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">&times;</button>
+    <h2 id="modalTitle">Novo Agendamento</h2>
+    <span class="service-badge" id="modalService"></span>
+
+    <div class="step-indicator" id="stepIndicator"></div>
+
+    <form id="formAgendamento">
+      <input type="hidden" id="servico">
+
+      <!-- Step 1: Patient -->
+      <div class="step" id="step1">
+        <div class="step-title">Passo 1 — Identificação</div>
+        <div class="prontuario-row">
+          <div class="form-group">
+            <label for="prontuario">Prontuário</label>
+            <input type="text" id="prontuario" placeholder="Ex: F034813" list="listaPacientes" autocomplete="off">
+            <datalist id="listaPacientes"></datalist>
+          </div>
+          <div class="form-group">
+            <label for="nome">Nome do Paciente</label>
+            <input type="text" id="nome" placeholder="Digite o prontuário" readonly>
+            <span class="found-name" id="foundName"></span>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-next" id="btnStep1Next" disabled>Próximo</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Calendar -->
+      <div class="step" id="step2">
+        <div class="step-title">Passo 2 — Selecione a Data</div>
+        <div id="calendarWidget"></div>
+        <div class="modal-actions" style="margin-top:1rem">
+          <button type="button" class="btn-back" id="btnStep2Back">Voltar</button>
+          <button type="button" class="btn-next" id="btnStep2Next" disabled>Próximo</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Time -->
+      <div class="step" id="step3">
+        <div class="step-title">Passo 3 — Selecione o Horário</div>
+        <div id="timeSlots"></div>
+        <div class="modal-actions" style="margin-top:1rem">
+          <button type="button" class="btn-back" id="btnStep3Back">Voltar</button>
+          <button type="button" class="btn-next" id="btnStep3Next" disabled>Próximo</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Confirm -->
+      <div class="step" id="step4">
+        <div class="step-title">Passo 4 — Confirmar</div>
+        <div class="summary-box" id="summaryBox"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn-back" id="btnStep4Back">Voltar</button>
+          <button type="submit" class="btn-save">Confirmar Agendamento</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal-overlay" id="successOverlay">
+  <div class="modal success-modal" style="max-width:400px">
+    <button class="modal-close" id="successClose">&times;</button>
+    <div class="success-icon">&#9989;</div>
+    <h2>Agendamento Realizado!</h2>
+    <div class="success-details" id="successDetails"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-back btn-outline" id="successStay">Continuar Agendando</button>
+      <a href="agendamentos.html" class="btn-save" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">Ver Agendamentos</a>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'agenda_reabilitacao';
+
+  const servicos = [
+    { id: 'terapia', nome: 'Terapia Funcional', emoji: '&#127959;', cor: '#3182ce' },
+    { id: 'tenis', nome: 'Tênis de Mesa', emoji: '&#127955;', cor: '#dd6b20' },
+    { id: 'alimentar', nome: 'Grupo de Orientação Alimentar', emoji: '&#127858;', cor: '#38a169' },
+    { id: 'vesical', nome: 'Grupo de Orientação Vesical', emoji: '&#128167;', cor: '#805ad5' },
+    { id: 'habitos', nome: 'Grupo de Orientação de Hábitos Saudáveis', emoji: '&#127793;', cor: '#d69e2e' },
+    { id: 'caminhada', nome: 'Caminhada', emoji: '&#127939;', cor: '#e53e3e' }
+  ];
+
+  const PACIENTES_KEY = 'pacientes_cadastrados';
+  const PACIENTES_SEED = [
+    { prontuario: 'F034813', nome: 'Carlos Nascimento' },
+    { prontuario: 'F041227', nome: 'Maria Aparecida Silva' },
+    { prontuario: 'F038591', nome: 'João Batista Oliveira' },
+    { prontuario: 'F045902', nome: 'Ana Lúcia Pereira' },
+    { prontuario: 'F029874', nome: 'Pedro Henrique Costa' },
+    { prontuario: 'F052316', nome: 'Lucia Helena Santos' },
+    { prontuario: 'F047128', nome: 'Fernando Almeida Junior' },
+    { prontuario: 'F033605', nome: 'Rosa Maria Ferreira' },
+    { prontuario: 'F040719', nome: 'Antonio Carlos Lima' },
+    { prontuario: 'F036482', nome: 'Sandra Regina Barbosa' },
+    { prontuario: 'F051903', nome: 'Ricardo Augusto Martins' },
+    { prontuario: 'F044176', nome: 'Patrícia Menezes Rocha' },
+    { prontuario: 'F030558', nome: 'Josefa de Jesus Souza' },
+    { prontuario: 'F049231', nome: 'Marcos Vinicius Dias' },
+    { prontuario: 'F042845', nome: 'Beatriz Cristina Ribeiro' },
+    { prontuario: 'F037614', nome: 'Luiz Fernando Campos' },
+    { prontuario: 'F053720', nome: 'Amanda Carvalho Gomes' },
+    { prontuario: 'F048392', nome: 'Raimundo Nonato Araujo' },
+    { prontuario: 'F035867', nome: 'Terezinha de Jesus Melo' },
+    { prontuario: 'F050143', nome: 'Eduardo Henrique Barbosa' }
+  ];
+
+  function carregarPacientes() {
+    let dados;
+    try { dados = JSON.parse(localStorage.getItem(PACIENTES_KEY)); }
+    catch { dados = null; }
+    if (!dados || !dados.length) {
+      dados = PACIENTES_SEED;
+      localStorage.setItem(PACIENTES_KEY, JSON.stringify(dados));
+    }
+    return dados.filter(p => p && p.prontuario && p.nome);
+  }
+
+  const TODOS_HORARIOS = ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00'];
+
+  let currentService = '';
+  let selectedDate = '';
+  let selectedTime = '';
+  let calendarMonth = new Date().getMonth();
+  let calendarYear = new Date().getFullYear();
+
+  // ---- Persistence ----
+  function carregar() {
+    try {
+      const dados = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      return dados.filter(a => a && a.id && a.nome);
+    }
+    catch { return []; }
+  }
+  function salvar(dados) { localStorage.setItem(STORAGE_KEY, JSON.stringify(dados)); }
+  function gerarId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  // ---- Toast ----
+  let toastTimer = null;
+  function mostrarToast(msg, tipo) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (tipo ? ' ' + tipo : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  // ---- Render Services ----
+  function renderizarServicos() {
+    const grid = document.getElementById('servicesGrid');
+    grid.innerHTML = servicos.map(s => `
+      <div class="service-card" data-servico="${s.nome}" style="border-left-color:${s.cor}">
+        <div class="icon" style="background:${s.cor}20; color:${s.cor}">${s.emoji}</div>
+        <div class="info">
+          <h3>${s.nome}</h3>
+          <span>Clique para agendar</span>
+        </div>
+      </div>
+    `).join('');
+    grid.querySelectorAll('.service-card').forEach(el => {
+      el.addEventListener('click', function() {
+        abrirModal(this.dataset.servico);
+      });
+    });
+  }
+
+  // ---- Modal Lifecycle ----
+  function abrirModal(servico) {
+    currentService = servico;
+    selectedDate = '';
+    selectedTime = '';
+    calendarMonth = new Date().getMonth();
+    calendarYear = new Date().getFullYear();
+    document.getElementById('modalTitle').textContent = 'Novo Agendamento';
+    document.getElementById('modalService').textContent = servico;
+    document.getElementById('servico').value = servico;
+    document.getElementById('formAgendamento').reset();
+    document.getElementById('foundName').style.display = 'none';
+    mostrarPasso(1);
+    document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById('prontuario').focus();
+  }
+
+  function fecharModal() {
+    document.getElementById('modalOverlay').classList.remove('active');
+  }
+
+  document.getElementById('modalClose').addEventListener('click', fecharModal);
+  document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) fecharModal();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') fecharModal();
+  });
+
+  // ---- Step Navigation ----
+  function mostrarPasso(num) {
+    document.querySelectorAll('.step').forEach((el, i) => {
+      el.classList.toggle('active', i + 1 === num);
+    });
+    atualizarIndicador(num);
+  }
+
+  function atualizarIndicador(current) {
+    const el = document.getElementById('stepIndicator');
+    el.innerHTML = '';
+    for (let i = 1; i <= 4; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'step-dot';
+      if (i === current) dot.classList.add('active');
+      else if (i < current) dot.classList.add('done');
+      el.appendChild(dot);
+    }
+  }
+
+  // ---- Step 1: Patient ----
+  function popularDatalist() {
+    const dl = document.getElementById('listaPacientes');
+    const pacientes = carregarPacientes();
+    dl.innerHTML = pacientes.map(p => `<option value="${p.prontuario}">`).join('');
+  }
+
+  function buscarPaciente(prontuario) {
+    return carregarPacientes().find(p => p.prontuario === prontuario);
+  }
+
+  document.getElementById('prontuario').addEventListener('input', function() {
+    const p = buscarPaciente(this.value.trim().toUpperCase());
+    const nomeEl = document.getElementById('nome');
+    const foundEl = document.getElementById('foundName');
+    const btn = document.getElementById('btnStep1Next');
+    if (p) {
+      nomeEl.value = p.nome;
+      foundEl.textContent = 'Paciente encontrado';
+      foundEl.style.display = 'inline';
+      btn.disabled = false;
+    } else {
+      nomeEl.value = '';
+      foundEl.style.display = 'none';
+      btn.disabled = true;
+    }
+  });
+
+  document.getElementById('prontuario').addEventListener('blur', function() {
+    this.value = this.value.trim().toUpperCase();
+    if (!buscarPaciente(this.value) && this.value) {
+      document.getElementById('nome').value = '';
+      document.getElementById('foundName').style.display = 'none';
+      document.getElementById('btnStep1Next').disabled = true;
+    }
+  });
+
+  document.getElementById('btnStep1Next').addEventListener('click', function() {
+    if (!this.disabled) {
+      renderizarCalendario();
+      mostrarPasso(2);
+    }
+  });
+
+  // ---- Step 2: Calendar ----
+  function renderizarCalendario() {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const primeiroDia = new Date(calendarYear, calendarMonth, 1);
+    const ultimoDia = new Date(calendarYear, calendarMonth + 1, 0);
+    const mesNome = primeiroDia.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    const diaSemanaInicio = primeiroDia.getDay();
+
+    let html = `
+      <div class="calendar-header">
+        <button type="button" class="calendar-nav" id="calPrev">&#8249;</button>
+        <span class="month-year">${mesNome.charAt(0).toUpperCase() + mesNome.slice(1)}</span>
+        <button type="button" class="calendar-nav" id="calNext">&#8250;</button>
+      </div>
+      <div class="calendar-weekdays">
+        <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+      </div>
+      <div class="calendar-days">`;
+
+    for (let i = 0; i < diaSemanaInicio; i++) {
+      html += '<button type="button" disabled class="other-month"></button>';
+    }
+
+    for (let d = 1; d <= ultimoDia.getDate(); d++) {
+      const data = new Date(calendarYear, calendarMonth, d);
+      data.setHours(0, 0, 0, 0);
+      const dataStr = formatarDataISO(calendarYear, calendarMonth + 1, d);
+      const isPast = data < hoje;
+      const isSelected = dataStr === selectedDate;
+      html += `<button type="button" value="${dataStr}" ${isPast ? 'disabled' : ''} class="${isSelected ? 'selected' : ''}">${d}</button>`;
+    }
+
+    html += '</div>';
+    document.getElementById('calendarWidget').innerHTML = html;
+
+    document.querySelectorAll('.calendar-days button:not(:disabled)').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.calendar-days button').forEach(b => b.classList.remove('selected'));
+        this.classList.add('selected');
+        selectedDate = this.value;
+        document.getElementById('btnStep2Next').disabled = false;
+      });
+    });
+
+    document.getElementById('calPrev').addEventListener('click', function() {
+      calendarMonth--;
+      if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+      renderizarCalendario();
+    });
+    document.getElementById('calNext').addEventListener('click', function() {
+      calendarMonth++;
+      if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+      renderizarCalendario();
+    });
+
+    if (selectedDate) {
+      document.querySelectorAll('.calendar-days button').forEach(b => {
+        if (b.value === selectedDate) {
+          b.classList.add('selected');
+          document.getElementById('btnStep2Next').disabled = false;
+        }
+      });
+    } else {
+      document.getElementById('btnStep2Next').disabled = true;
+    }
+  }
+
+  function formatarDataISO(ano, mes, dia) {
+    return ano + '-' + String(mes).padStart(2, '0') + '-' + String(dia).padStart(2, '0');
+  }
+
+  document.getElementById('btnStep2Back').addEventListener('click', function() {
+    mostrarPasso(1);
+    document.getElementById('prontuario').focus();
+  });
+
+  document.getElementById('btnStep2Next').addEventListener('click', function() {
+    if (!this.disabled) {
+      renderizarHorarios();
+      mostrarPasso(3);
+    }
+  });
+
+  // ---- Step 3: Time ----
+  function renderizarHorarios() {
+    const dados = carregar();
+    const ocupados = dados.filter(a => a.data === selectedDate).map(a => a.horario);
+    const container = document.getElementById('timeSlots');
+
+    container.innerHTML = '<div class="time-grid">' +
+      TODOS_HORARIOS.map(h => {
+        const ocupado = ocupados.includes(h);
+        return `<button type="button" class="time-btn ${selectedTime === h ? 'selected' : ''}" value="${h}" ${ocupado ? 'disabled' : ''}>${h}${ocupado ? ' (ocupado)' : ''}</button>`;
+      }).join('') +
+    '</div>';
+
+    container.querySelectorAll('.time-btn:not(:disabled)').forEach(btn => {
+      btn.addEventListener('click', function() {
+        container.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+        this.classList.add('selected');
+        selectedTime = this.value;
+        document.getElementById('btnStep3Next').disabled = false;
+      });
+    });
+
+    document.getElementById('btnStep3Next').disabled = !selectedTime || ocupados.includes(selectedTime);
+    if (selectedTime && ocupados.includes(selectedTime)) {
+      selectedTime = '';
+      document.getElementById('btnStep3Next').disabled = true;
+    }
+  }
+
+  document.getElementById('btnStep3Back').addEventListener('click', function() {
+    mostrarPasso(2);
+  });
+
+  document.getElementById('btnStep3Next').addEventListener('click', function() {
+    if (!this.disabled) {
+      mostrarResumo();
+      mostrarPasso(4);
+    }
+  });
+
+  // ---- Step 4: Summary ----
+  function mostrarResumo() {
+    const prontuario = document.getElementById('prontuario').value.trim().toUpperCase();
+    const nome = document.getElementById('nome').value.trim();
+    const dataFmt = new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR');
+    document.getElementById('summaryBox').innerHTML = `
+      <div class="row"><strong>Paciente:</strong> ${nome} (${prontuario})</div>
+      <div class="row"><strong>Serviço:</strong> ${currentService}</div>
+      <div class="row"><strong>Data:</strong> ${dataFmt}</div>
+      <div class="row"><strong>Horário:</strong> ${selectedTime}</div>
+    `;
+  }
+
+  document.getElementById('btnStep4Back').addEventListener('click', function() {
+    mostrarPasso(3);
+  });
+
+  // ---- Success Modal ----
+  function mostrarSucesso(dados) {
+    fecharModal();
+    const dataFmt = new Date(dados.data + 'T12:00:00').toLocaleDateString('pt-BR');
+    document.getElementById('successDetails').innerHTML = `
+      <div class="row"><strong>Paciente:</strong> ${dados.nome}</div>
+      <div class="row"><strong>Serviço:</strong> ${dados.servico}</div>
+      <div class="row"><strong>Data:</strong> ${dataFmt}</div>
+      <div class="row"><strong>Horário:</strong> ${dados.horario}</div>
+    `;
+    document.getElementById('successOverlay').classList.add('active');
+  }
+
+  function fecharSucesso() {
+    document.getElementById('successOverlay').classList.remove('active');
+  }
+
+  document.getElementById('successClose').addEventListener('click', fecharSucesso);
+  document.getElementById('successStay').addEventListener('click', fecharSucesso);
+  document.getElementById('successOverlay').addEventListener('click', function(e) {
+    if (e.target === this) fecharSucesso();
+  });
+
+  // ---- Submit ----
+  document.getElementById('formAgendamento').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const prontuario = document.getElementById('prontuario').value.trim().toUpperCase();
+    const nome = document.getElementById('nome').value.trim();
+    if (!prontuario || !nome || !currentService || !selectedDate || !selectedTime) {
+      mostrarToast('Erro: dados incompletos.', 'error');
+      return;
+    }
+    const dados = carregar();
+    if (dados.some(a => a.data === selectedDate && a.horario === selectedTime)) {
+      mostrarToast('Este horário já foi agendado.', 'error');
+      return;
+    }
+    if (dados.some(a => a.prontuario === prontuario && a.data === selectedDate && a.horario === selectedTime)) {
+      mostrarToast('Este paciente já possui atividade neste mesmo dia e horário.', 'error');
+      return;
+    }
+    if (dados.some(a => a.prontuario === prontuario && a.data === selectedDate && a.servico === currentService)) {
+      mostrarToast(`${currentService} já agendado para este paciente nesta data.`, 'error');
+      return;
+    }
+    const novo = { id: gerarId(), prontuario, nome, servico: currentService, data: selectedDate, horario: selectedTime };
+    dados.push(novo);
+    salvar(dados);
+    mostrarSucesso(novo);
+  });
+
+  // ---- Init ----
+  popularDatalist();
+  renderizarServicos();
+  // ---- Menu Toggle ----
+  (function() {
+    var toggle = document.getElementById('menuToggle');
+    var links = document.getElementById('headerLinks');
+    if (toggle && links) {
+      toggle.addEventListener('click', function() {
+        links.classList.toggle('open');
+        toggle.innerHTML = links.classList.contains('open') ? '&#10005;' : '&#9776;';
+      });
+      links.querySelectorAll('a').forEach(function(a) {
+        a.addEventListener('click', function() {
+          links.classList.remove('open');
+          toggle.innerHTML = '&#9776;';
+        });
+      });
+    }
+  })();
+})();
+</script>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-links">
+      <a href="index.html">Início</a>
+      <a href="cadastro.html">Cadastrar</a>
+      <a href="agendamentos.html">Agendamentos</a>
+      <a href="agendar.html">Agendar</a>
+    </div>
+    <div class="footer-ext">
+      <a href="https://sarah.br" target="_blank" rel="noopener">sarah.br</a>
+    </div>
+    <div class="footer-copy">Agenda de Reabilitação &mdash; Sistema de Agendamento de Serviços</div>
+    <div class="footer-author">Desenvolvido por Carlos Nascimento &mdash; Especialista em sistemas de informações</div>
+  </div>
+</footer>
+</body>
+</html>

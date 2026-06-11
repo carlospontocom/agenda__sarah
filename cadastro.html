@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastrar Paciente</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    width: 100%;
+  }
+  nav .logo { font-weight: 800; font-size: 1.15rem; color: #2b6cb0; text-decoration: none; }
+  nav .menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #2b6cb0;
+    cursor: pointer;
+    padding: .25rem;
+    line-height: 1;
+  }
+  nav .nav-links { display: flex; gap: .75rem; align-items: center; }
+  nav .nav-links a {
+    text-decoration: none;
+    color: #4a5568;
+    font-size: .88rem;
+    font-weight: 600;
+    padding: .4rem .75rem;
+    border-radius: 6px;
+    transition: background .2s;
+  }
+  nav .nav-links a:hover { background: #ebf4ff; color: #2b6cb0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f4f8;
+    color: #1a202c;
+    min-height: 100vh;
+  }
+  .page-wrap {
+    min-height: calc(100vh - 60px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+    padding: 2rem 1.75rem;
+    width: 100%;
+    max-width: 420px;
+  }
+  .card h1 { font-size: 1.4rem; color: #2b6cb0; margin-bottom: .25rem; }
+  .card .sub { color: #718096; font-size: .85rem; margin-bottom: 1.5rem; }
+  .form-group { display: flex; flex-direction: column; gap: .3rem; margin-bottom: 1.1rem; }
+  .form-group label { font-size: .85rem; font-weight: 600; color: #4a5568; }
+  .form-group input {
+    font: inherit;
+    border-radius: 8px;
+    border: 1px solid #cbd5e0;
+    padding: .65rem .75rem;
+    font-size: .95rem;
+    outline: none;
+    transition: border .2s, box-shadow .2s;
+  }
+  .form-group input:focus { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49,130,206,.15); }
+  .form-group input:read-only { background: #f7fafc; color: #4a5568; }
+  .prontuario-row { display: flex; align-items: center; gap: .5rem; }
+  .prontuario-row input { flex: 1; }
+  .btn-refresh {
+    background: none;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: .5rem .65rem;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: #4a5568;
+    transition: background .2s;
+  }
+  .btn-refresh:hover { background: #edf2f7; }
+  .btn-submit {
+    width: 100%;
+    padding: .75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    background: #38a169;
+    cursor: pointer;
+    transition: background .2s;
+    margin-top: .5rem;
+  }
+  .btn-submit:hover { background: #2f855a; }
+  .btn-submit:disabled { background: #a0c4e8; cursor: default; }
+  .links { margin-top: 1.25rem; text-align: center; display: flex; gap: 1rem; justify-content: center; }
+  .links a {
+    color: #3182ce;
+    text-decoration: none;
+    font-size: .88rem;
+    font-weight: 600;
+  }
+  .links a:hover { text-decoration: underline; }
+
+  .success-box { display: none; text-align: center; padding: 1.5rem 0; }
+  .success-box .icon { font-size: 3rem; margin-bottom: .5rem; }
+  .success-box h2 { color: #276749; font-size: 1.2rem; margin-bottom: .25rem; }
+  .success-box p { color: #718096; font-size: .9rem; }
+  .success-box .counter {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #3182ce;
+    margin: 1rem 0;
+  }
+  .success-box .btn-agendar {
+    display: inline-block;
+    background: #3182ce;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    padding: .7rem 1.5rem;
+    border-radius: 8px;
+    margin-top: .5rem;
+    transition: background .2s;
+  }
+  .success-box .btn-agendar:hover { background: #2b6cb0; }
+
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: #2d3748;
+    color: #fff;
+    padding: .75rem 1.25rem;
+    border-radius: 8px;
+    font-size: .9rem;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity .3s, transform .3s;
+    pointer-events: none;
+    z-index: 300;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: #276749; }
+  .toast.error { background: #9b2c2c; }
+
+  @media (max-width: 600px) {
+    nav { flex-wrap: wrap; padding: .75rem 1rem; }
+    nav .menu-toggle { display: block; }
+    nav .nav-links {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      gap: .25rem;
+      padding: .75rem 0 0;
+    }
+    nav .nav-links.open { display: flex; }
+    nav .nav-links a { padding: .6rem .75rem; width: 100%; text-align: center; }
+    body { padding: 0; }
+    .card { border-radius: 0; box-shadow: none; min-height: calc(100vh - 56px); }
+  }
+
+  footer {
+    background: #1a202c;
+    color: #a0aec0;
+    font-size: .82rem;
+    padding: 2rem 1.5rem;
+  }
+  .footer-inner { max-width: 1100px; margin: 0 auto; text-align: center; }
+  .footer-links { display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: center; margin-bottom: 1rem; }
+  .footer-links a { color: #cbd5e0; text-decoration: none; transition: color .2s; }
+  .footer-links a:hover { color: #fff; }
+  .footer-ext { margin-bottom: 1rem; }
+  .footer-ext a {
+    display: inline-block;
+    background: #2d3748;
+    color: #e2e8f0;
+    text-decoration: none;
+    font-weight: 700;
+    padding: .5rem 1.25rem;
+    border-radius: 8px;
+    transition: background .2s;
+  }
+  .footer-ext a:hover { background: #4a5568; }
+  .footer-copy { color: #718096; }
+  .footer-author { color: #4a5568; font-size: .8rem; margin-top: .5rem; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">&#9881; Reabilitação</a>
+  <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">&#9776;</button>
+  <div class="nav-links" id="navLinks">
+    <a href="index.html">Início</a>
+    <a href="agendamentos.html">Agendamentos</a>
+    <a href="agendar.html">Agendar</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+<div class="card">
+  <h1>Cadastrar Paciente</h1>
+  <p class="sub">Preencha os dados para gerar um novo prontuário</p>
+  <form id="formCadastro">
+    <div class="form-group">
+      <label for="nome">Nome Completo</label>
+      <input type="text" id="nome" placeholder="Ex: João Silva" required>
+    </div>
+    <div class="form-group">
+      <label for="dataNasc">Data de Nascimento</label>
+      <input type="date" id="dataNasc" required>
+    </div>
+    <div class="form-group">
+      <label>Prontuário</label>
+      <div class="prontuario-row">
+        <input type="text" id="prontuario" readonly>
+        <button type="button" class="btn-refresh" id="btnRefresh" title="Gerar outro">&#x21bb;</button>
+      </div>
+    </div>
+    <button type="submit" class="btn-submit" id="btnSubmit">Salvar Paciente</button>
+  </form>
+  <div class="success-box" id="successBox">
+    <div class="icon">&#9989;</div>
+    <h2>Paciente Cadastrado!</h2>
+    <p id="successNome"></p>
+    <div class="counter" id="counter">5</div>
+    <p style="color:#718096;font-size:.85rem">Redirecionando para agendamento...</p>
+    <a href="agendar.html" class="btn-agendar">Agendar Agora</a>
+  </div>
+  <div class="links">
+    <a href="index.html">&larr; Voltar</a>
+    <a href="agendamentos.html">Ver Agendamentos</a>
+  </div>
+</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+(function() {
+  const PACIENTES_KEY = 'pacientes_cadastrados';
+
+  function gerarProntuario() {
+    const num = String(Math.floor(Math.random() * 100000)).padStart(5, '0');
+    return 'F0' + num;
+  }
+
+  function gerarUnico() {
+    let p = gerarProntuario();
+    const existentes = carregar();
+    while (existentes.some(e => e.prontuario === p)) {
+      p = gerarProntuario();
+    }
+    return p;
+  }
+
+  function carregar() {
+    try { return JSON.parse(localStorage.getItem(PACIENTES_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function salvar(dados) {
+    localStorage.setItem(PACIENTES_KEY, JSON.stringify(dados));
+  }
+
+  let toastTimer = null;
+  let redirectTimer = null;
+  function mostrarToast(msg, tipo) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (tipo ? ' ' + tipo : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  function atualizarProntuario() {
+    document.getElementById('prontuario').value = gerarUnico();
+  }
+
+  function mostrarSucesso(nome) {
+    document.getElementById('formCadastro').style.display = 'none';
+    document.getElementById('successNome').textContent = nome;
+    document.getElementById('successBox').style.display = 'block';
+    let count = 5;
+    const el = document.getElementById('counter');
+    el.textContent = count;
+    clearInterval(redirectTimer);
+    redirectTimer = setInterval(() => {
+      count--;
+      if (count <= 0) {
+        clearInterval(redirectTimer);
+        window.location.href = 'agendar.html';
+      } else {
+        el.textContent = count;
+      }
+    }, 1000);
+  }
+
+  document.getElementById('btnRefresh').addEventListener('click', atualizarProntuario);
+
+  document.getElementById('formCadastro').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const nome = document.getElementById('nome').value.trim();
+    const dataNasc = document.getElementById('dataNasc').value;
+    const prontuario = document.getElementById('prontuario').value.trim();
+
+    if (!nome || !dataNasc || !prontuario) {
+      mostrarToast('Preencha todos os campos.', 'error');
+      return;
+    }
+
+    const dados = carregar();
+    if (dados.some(p => p.prontuario === prontuario)) {
+      mostrarToast('Prontuário já existe. Gere outro.', 'error');
+      atualizarProntuario();
+      return;
+    }
+
+    dados.push({ prontuario, nome, dataNasc });
+    salvar(dados);
+    mostrarSucesso(nome, prontuario);
+  });
+
+  atualizarProntuario();
+
+  // ---- Menu Toggle ----
+  (function() {
+    var toggle = document.getElementById('menuToggle');
+    var links = document.getElementById('navLinks');
+    if (toggle && links) {
+      toggle.addEventListener('click', function() {
+        links.classList.toggle('open');
+        toggle.innerHTML = links.classList.contains('open') ? '&#10005;' : '&#9776;';
+      });
+      links.querySelectorAll('a').forEach(function(a) {
+        a.addEventListener('click', function() {
+          links.classList.remove('open');
+          toggle.innerHTML = '&#9776;';
+        });
+      });
+    }
+  })();
+})();
+</script>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-links">
+      <a href="index.html">Início</a>
+      <a href="agendamentos.html">Agendamentos</a>
+      <a href="agendar.html">Agendar</a>
+    </div>
+    <div class="footer-ext">
+      <a href="https://sarah.br" target="_blank" rel="noopener">sarah.br</a>
+    </div>
+    <div class="footer-copy">Agenda de Reabilitação &mdash; Sistema de Agendamento de Serviços</div>
+    <div class="footer-author">Desenvolvido por Carlos Nascimento &mdash; Especialista em sistemas de informações</div>
+  </div>
+</footer>
+</body>
+</html>
