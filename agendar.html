@@ -50,40 +50,95 @@
   }
   .header-link:hover { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49,130,206,.12); }
 
-  /* ---- Service Cards ---- */
+  /* ---- Service Cards - Modernizados ---- */
   .services-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
   }
   .service-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 1.25rem 1rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 1.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     cursor: pointer;
-    transition: transform .2s, box-shadow .2s;
-    border-left: 5px solid #3182ce;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #e2e8f0;
+    border-top: 6px solid #3182ce;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .service-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border-color: transparent;
+  }
+  .service-card .card-header {
     display: flex;
     align-items: center;
     gap: 1rem;
   }
-  .service-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,.12);
-  }
   .service-card .icon {
-    width: 44px; height: 44px;
-    border-radius: 10px;
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
+    font-size: 1.6rem;
     flex-shrink: 0;
+    transition: transform 0.3s ease;
   }
-  .service-card .info h3 { font-size: 1rem; color: #2d3748; }
-  .service-card .info span { font-size: .8rem; color: #718096; }
+  .service-card:hover .icon {
+    transform: scale(1.1) rotate(5deg);
+  }
+  .service-card .info h3 {
+    font-size: 1.15rem;
+    color: #1a202c;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .service-card .card-body {
+    font-size: 0.9rem;
+    color: #4a5568;
+    line-height: 1.5;
+  }
+  .service-card .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #edf2f7;
+  }
+  .service-card .badge-vagas {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #2f855a;
+    background: #c6f6d5;
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+  }
+  .service-card .btn-action {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #3182ce;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: color 0.2s;
+  }
+  .service-card:hover .btn-action {
+    color: #2b6cb0;
+  }
 
   /* ---- Modal ---- */
   .modal-overlay {
@@ -284,7 +339,7 @@
   .btn-next { background: #3182ce; color: #fff; }
   .btn-next:hover { background: #2b6cb0; }
   .btn-next:disabled { background: #a0c4e8; cursor: default; }
-  .btn-save { background: #38a169; color: #fff; }
+  .btn-save { background: #38a169; color: #fff; padding: 12px; border-radius: 6px;}
   .btn-save:hover { background: #2f855a; }
 
   /* ---- Success Modal ---- */
@@ -405,7 +460,6 @@
   <div class="services-grid" id="servicesGrid"></div>
 </div>
 
-<!-- Scheduling Modal -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <button class="modal-close" id="modalClose">&times;</button>
@@ -417,7 +471,6 @@
     <form id="formAgendamento">
       <input type="hidden" id="servico">
 
-      <!-- Step 1: Patient -->
       <div class="step" id="step1">
         <div class="step-title">Passo 1 — Identificação</div>
         <div class="prontuario-row">
@@ -437,7 +490,6 @@
         </div>
       </div>
 
-      <!-- Step 2: Calendar -->
       <div class="step" id="step2">
         <div class="step-title">Passo 2 — Selecione a Data</div>
         <div id="calendarWidget"></div>
@@ -447,7 +499,6 @@
         </div>
       </div>
 
-      <!-- Step 3: Time -->
       <div class="step" id="step3">
         <div class="step-title">Passo 3 — Selecione o Horário</div>
         <div id="timeSlots"></div>
@@ -457,7 +508,6 @@
         </div>
       </div>
 
-      <!-- Step 4: Confirm -->
       <div class="step" id="step4">
         <div class="step-title">Passo 4 — Confirmar</div>
         <div class="summary-box" id="summaryBox"></div>
@@ -470,7 +520,6 @@
   </div>
 </div>
 
-<!-- Success Modal -->
 <div class="modal-overlay" id="successOverlay">
   <div class="modal success-modal" style="max-width:400px">
     <button class="modal-close" id="successClose">&times;</button>
@@ -563,15 +612,28 @@
     toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
   }
 
-  // ---- Render Services ----
+  // ---- Render Services Modernizados ----
   function renderizarServicos() {
     const grid = document.getElementById('servicesGrid');
     grid.innerHTML = servicos.map(s => `
-      <div class="service-card" data-servico="${s.nome}" style="border-left-color:${s.cor}">
-        <div class="icon" style="background:${s.cor}20; color:${s.cor}">${s.emoji}</div>
-        <div class="info">
-          <h3>${s.nome}</h3>
-          <span>Clique para agendar</span>
+      <div class="service-card" data-servico="${s.nome}" style="border-top-color:${s.cor}">
+        <div class="card-header">
+          <div class="icon" style="background:${s.cor}15; color:${s.cor}">${s.emoji}</div>
+          <div class="info">
+            <h3>${s.nome}</h3>
+          </div>
+        </div>
+        <div class="card-body">
+          Atendimento especializado voltado para o programa de reabilitação e acompanhamento do paciente.
+        </div>
+        <div class="card-footer">
+          <span class="badge-vagas">
+            <span style="width:6px; height:6px; background:#38a169; border-radius:50%; display:inline-block"></span>
+            Horários disponíveis
+          </span>
+          <span class="btn-action">
+            Agendar ➔
+          </span>
         </div>
       </div>
     `).join('');
